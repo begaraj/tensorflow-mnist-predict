@@ -98,7 +98,7 @@ def predictint(imvalue):
         #saver.restore(sess, "model2.ckpt")
 
         #FIX FORM COMMENT OF THE POST
-        new_saver = tf.train.import_meta_graph('model2.ckpt.meta')
+        new_saver = tf.train.import_meta_graph('model.ckpt.meta')
         new_saver.restore(sess, tf.train.latest_checkpoint('./'))
         
         #print ("Model restored.")
