@@ -27,17 +27,11 @@ https://www.tensorflow.org/versions/master/tutorials/mnist/pros/index.html
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
-#import data
-mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-
-sess = tf.InteractiveSession()
 
 # Create the model
-x = tf.placeholder(tf.float32, [None, 784])
+x = tf.placeholder(tf.float32, [None, 784], name='x')
 y_ = tf.placeholder(tf.float32, [None, 10])
-W = tf.Variable(tf.zeros([784, 10]))
-b = tf.Variable(tf.zeros([10]))
-y = tf.nn.softmax(tf.matmul(x, W) + b)
+
 
 def weight_variable(shape):
   initial = tf.truncated_normal(shape, stddev=0.1)
@@ -76,7 +70,7 @@ b_fc1 = bias_variable([1024])
 h_pool2_flat = tf.reshape(h_pool2, [-1, 7*7*64])
 h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 
-keep_prob = tf.placeholder(tf.float32)
+keep_prob = tf.placeholder(tf.float32, name='keep_prob')
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
 W_fc2 = weight_variable([1024, 10])
@@ -87,9 +81,9 @@ y_conv=tf.nn.softmax(tf.matmul(h_fc1_drop, W_fc2) + b_fc2)
 # Define loss and optimizer
 cross_entropy = -tf.reduce_sum(y_*tf.log(y_conv))
 train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
-correct_prediction = tf.equal(tf.argmax(y_conv,1), tf.argmax(y_,1))
+prediction = tf.argmax(y_conv, 1, name='prediction')
+correct_prediction = tf.equal(prediction, tf.argmax(y_,1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
 
 """
 Train the model and save the model to disk as a model2.ckpt file
@@ -98,6 +92,10 @@ file is stored in the same directory as this python script is started
 Based on the documentatoin at
 https://www.tensorflow.org/versions/master/how_tos/variables/index.html
 """
+#import data
+mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+
+sess = tf.InteractiveSession()
 saver = tf.train.Saver()
 sess.run(tf.initialize_all_variables())
 #with tf.Session() as sess:
@@ -108,6 +106,8 @@ for i in range(1000):
     train_accuracy = accuracy.eval(feed_dict={
         x:batch[0], y_: batch[1], keep_prob: 1.0})
     print("step %d, training accuracy %g"%(i, train_accuracy))
+    print("test accuracy %g"%accuracy.eval(feed_dict={
+        x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
   train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
 
 save_path = saver.save(sess, "model.ckpt")
@@ -115,6 +115,3 @@ print ("Model saved in file: ", save_path)
 
 print("test accuracy %g"%accuracy.eval(feed_dict={
     x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}))
-
-
-
